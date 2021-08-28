@@ -22,21 +22,24 @@
     "@types/uuid": "^8.3.1",
     "classnames": "^2.3.1",
     "color-convert": "^2.0.1",
+    "comlink": "^4.3.1",
     "del-cli": "^4.0.1",
     "get-pixels": "^3.3.3",
     "gif-encoder": "^0.7.2",
     "lz-string": "^1.4.4",
     "react": "^17.0.2",
+    "react-app-rewired": "^2.1.8",
     "react-color": "^2.19.3",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
     "seedrandom": "^3.0.5",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "worker-loader": "^3.0.8"
   },
   "scripts": {
     "tsc": "tsc",
-    "start": "react-scripts start",
-    "build": "react-scripts build && del ./docs && mkdir ./docs && mv ./build/* ./docs",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build && del ./docs && mkdir ./docs && mv ./build/* ./docs",
     "eject": "react-scripts eject",
     "pretty": "prettier --write \"**/*.{js,md,ts,html,tsx,json}\""
   },

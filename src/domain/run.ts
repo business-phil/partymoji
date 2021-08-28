@@ -3,6 +3,7 @@ import getPixels from 'get-pixels';
 // @ts-ignore
 import gifEncoder from 'gif-encoder';
 import seedrandom from 'seedrandom';
+import { transformByName } from '../transforms';
 
 import { Color, TransformInput, Image, Dimensions, ImageData } from './types';
 import {
@@ -15,9 +16,8 @@ import {
 
 interface RunArgs {
   inputDataUrl: string;
-  transformList: TransformInput<any>[];
+  transformList: TransformInput[];
   fps: number;
-  onImageFinished: () => void;
 }
 
 interface ImageResult {
@@ -31,7 +31,6 @@ export const runTransforms = async ({
   transformList,
   inputDataUrl,
   fps,
-  onImageFinished,
 }: RunArgs): Promise<ImageResult[]> => {
   const random = seedrandom(inputDataUrl);
 
@@ -41,7 +40,8 @@ export const runTransforms = async ({
   let currentImage = originalImage;
 
   for (const transformInput of transformList) {
-    const result = transformInput.transform.fn({
+    const transform = transformByName(transformInput.transformName);
+    const result = transform.fn({
       image: currentImage,
       parameters: transformInput.params,
       random,
@@ -51,7 +51,7 @@ export const runTransforms = async ({
 
     // Transform any of our transparent pixels to what our gif understands to be transparent
     const image = encodeTransparency(
-      result.frames.map((f) => f.data),
+      result.frames.map((f: any) => f.data),
       transparentColor
     );
 
@@ -61,8 +61,6 @@ export const runTransforms = async ({
       transparentColor,
       fps
     );
-
-    onImageFinished();
 
     currentImage = result;
     results.push({

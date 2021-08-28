@@ -27,6 +27,7 @@ import { transparentColor } from './transparent-color';
 import { transpose } from './transpose';
 
 import { assert } from '../domain/utils';
+import { Transform } from '../domain/types';
 
 export const POSSIBLE_TRANSFORMS = [
   backgroundImage,
@@ -58,7 +59,7 @@ export const POSSIBLE_TRANSFORMS = [
   transpose,
 ].sort((x, y) => (x.name > y.name ? 1 : -1));
 
-export const transformByName = (name: string) => {
+export const transformByName = (name: string): Transform<any> => {
   const t = POSSIBLE_TRANSFORMS.find((t) => t.name === name);
   assert(t);
   return t;

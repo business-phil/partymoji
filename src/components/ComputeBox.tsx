@@ -11,10 +11,11 @@ import {
 } from '@material-ui/core';
 
 import { assert } from '../domain/utils';
-import { runTransforms } from '../domain/run';
 import { TransformInput, TransformWithParams } from '../domain/types';
-import { transformByName } from '../transforms';
 import { sliderParam } from '../params/sliderParam';
+
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import RunTransformWorker from 'worker-loader!../domain/transform.worker';
 
 interface ComputeBoxProps {
   isDirty: boolean;
@@ -84,8 +85,8 @@ export const ComputeBox: React.FC<ComputeBoxProps> = ({
         disabled={buttonDisabled}
         onClick={async () => {
           const transformInputs = transforms.map(
-            (t): TransformInput<any> => ({
-              transform: transformByName(t.transformName),
+            (t): TransformInput => ({
+              transformName: t.transformName,
               params: t.paramsValues.map((p) => {
                 assert(p.valid);
                 return p.value;
@@ -94,28 +95,24 @@ export const ComputeBox: React.FC<ComputeBoxProps> = ({
           );
           setState({ loading: true });
           setTimeout(async () => {
-            try {
-              assert(
-                baseImageUrl,
-                'No source image, this button should be disabled!'
-              );
-              const start = Date.now();
-              let currIdx = 0;
-              setProgress(0);
-              const results = await runTransforms({
-                inputDataUrl: baseImageUrl,
-                transformList: transformInputs,
-                fps,
-                onImageFinished: () => {
-                  currIdx += 1;
-                  setProgress((currIdx / transformInputs.length) * 100);
-                },
-              });
+            assert(
+              baseImageUrl,
+              'No source image, this button should be disabled!'
+            );
+            const start = Date.now();
+            const worker = new RunTransformWorker();
+            worker.postMessage({
+              inputDataUrl: baseImageUrl,
+              transformList: transformInputs,
+              fps,
+            });
+            worker.onmessage = (event: any) => {
+              const results = event.data;
               const computeTime = Math.ceil((Date.now() - start) / 1000);
               setState({
                 loading: false,
                 computeTime,
-                results: results.map((result, idx) => ({
+                results: results.map((result: any, idx: number) => ({
                   transformName: transforms[idx].transformName,
                   gif: result.gif,
                 })),
@@ -123,10 +120,7 @@ export const ComputeBox: React.FC<ComputeBoxProps> = ({
               setFpsChanged(false);
               setProgress(undefined);
               onComputed();
-            } catch (err) {
-              console.error(err);
-              console.error(err.stack);
-            }
+            };
           });
         }}
       >
